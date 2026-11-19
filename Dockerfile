@@ -23,7 +23,7 @@ FROM registry.access.redhat.com/ubi9/python-312
 
 WORKDIR /app
 
-COPY --from=builder /tmp/wheels /tmp/wheels
+COPY --from=builder --chown=1001:0 /tmp/wheels /tmp/wheels
 COPY requirements.txt .
 
 USER 1001
