@@ -18,7 +18,7 @@
         url: "https://api.github.com/orgs/{{ github_org }}/packages/container/{{ container_package_name }}"
         method: DELETE
         headers:
-          Authorization: Bearer {{ github_api_token }}
+          Authorization: Bearer {{ github_pat }}
           Accept: application/vnd.github+json
           X-GitHub-Api-Version: "2022-11-28"
         status_code: [204, 404]
