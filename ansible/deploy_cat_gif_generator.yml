@@ -42,7 +42,6 @@
         name: "cat-gif-generator-{{ item.name }}"
         image: "{{ container_image }}:{{ image_tag }}"
         state: started
-        pull: always
         restart_policy: always
         ports:
           - "{{ item.published_port }}:{{ app_port }}"
