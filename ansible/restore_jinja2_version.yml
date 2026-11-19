@@ -11,6 +11,7 @@
     cve_fix_branch: security/cvefix
     github_org: shadowman-lab
     container_package_name: cat-gif-generator
+    dtrack_url: https://lightwelldemo.shadowman.dev:4000
 
   tasks:
     - name: Delete all existing cat-gif-generator container package versions
@@ -62,3 +63,25 @@
       register: branch_delete_result
       failed_when: branch_delete_result.rc > 1
       changed_when: branch_delete_result.rc == 0
+
+    - name: Get all SBOM projects from Dependency-Track
+      ansible.builtin.uri:
+        url: "{{ dtrack_url }}/api/v1/project?pageSize=1000"
+        method: GET
+        headers:
+          X-Api-Key: "{{ dtrack_api_key }}"
+          Accept: application/json
+        status_code: 200
+        return_content: true
+      register: dtrack_projects
+
+    - name: Delete all SBOM projects from Dependency-Track
+      ansible.builtin.uri:
+        url: "{{ dtrack_url }}/api/v1/project/{{ item.uuid }}"
+        method: DELETE
+        headers:
+          X-Api-Key: "{{ dtrack_api_key }}"
+        status_code: [204, 404]
+      loop: "{{ dtrack_projects.json }}"
+      loop_control:
+        label: "{{ item.name }} {{ item.version | default('') }}"
