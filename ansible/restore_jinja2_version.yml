@@ -25,6 +25,28 @@
         status_code: [204, 404]
       register: package_delete_result
 
+    - name: Get all SBOM projects from Dependency-Track
+      ansible.builtin.uri:
+        url: "{{ dtrack_url }}/api/v1/project?pageSize=1000"
+        method: GET
+        headers:
+          X-Api-Key: "{{ dtrack_api_key }}"
+          Accept: application/json
+        status_code: 200
+        return_content: true
+      register: dtrack_projects
+
+    - name: Delete all SBOM projects from Dependency-Track
+      ansible.builtin.uri:
+        url: "{{ dtrack_url }}/api/v1/project/{{ item.uuid }}"
+        method: DELETE
+        headers:
+          X-Api-Key: "{{ dtrack_api_key }}"
+        status_code: [204, 404]
+      loop: "{{ dtrack_projects.json }}"
+      loop_control:
+        label: "{{ item.name }} {{ item.version | default('') }}"
+
     - name: Clone Ansible-Lightwell
       ansible.builtin.git:
         repo: "{{ lightwell_repo }}"
@@ -63,25 +85,3 @@
       register: branch_delete_result
       failed_when: branch_delete_result.rc > 1
       changed_when: branch_delete_result.rc == 0
-
-    - name: Get all SBOM projects from Dependency-Track
-      ansible.builtin.uri:
-        url: "{{ dtrack_url }}/api/v1/project?pageSize=1000"
-        method: GET
-        headers:
-          X-Api-Key: "{{ dtrack_api_key }}"
-          Accept: application/json
-        status_code: 200
-        return_content: true
-      register: dtrack_projects
-
-    - name: Delete all SBOM projects from Dependency-Track
-      ansible.builtin.uri:
-        url: "{{ dtrack_url }}/api/v1/project/{{ item.uuid }}"
-        method: DELETE
-        headers:
-          X-Api-Key: "{{ dtrack_api_key }}"
-        status_code: [204, 404]
-      loop: "{{ dtrack_projects.json }}"
-      loop_control:
-        label: "{{ item.name }} {{ item.version | default('') }}"
