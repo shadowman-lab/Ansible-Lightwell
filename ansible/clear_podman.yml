@@ -1,0 +1,10 @@
+- name: Clear existing podman containers and images
+  hosts: "{{ vm_name | default('all') }}"
+  gather_facts: false
+
+  tasks:
+    - name: Prune all podman information
+      containers.podman.podman_prune:
+        system: true
+        system_all: true
+        system_volumes: true
