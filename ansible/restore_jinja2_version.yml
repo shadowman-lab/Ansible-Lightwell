@@ -80,9 +80,13 @@
       changed_when: gitresult.rc == 0
 
     - name: Delete the CVE fix branch
-      ansible.builtin.command:
-        cmd: git push origin --delete {{ cve_fix_branch }}
+      ansible.builtin.shell: >
+        git config core.sshCommand 'ssh -i {{ cert_key_file }} -F /dev/null' &&
+        git push origin --delete {{ cve_fix_branch }}
+      args:
         chdir: "{{ lightwell_clone_dest }}"
       register: branch_delete_result
-      failed_when: branch_delete_result.rc > 1
+      failed_when: >
+        branch_delete_result.rc != 0 and
+        'remote ref does not exist' not in branch_delete_result.stderr
       changed_when: branch_delete_result.rc == 0
