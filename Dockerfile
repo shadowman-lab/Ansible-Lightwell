@@ -23,6 +23,12 @@ FROM registry.access.redhat.com/ubi9/python-312
 
 WORKDIR /app
 
+USER root
+RUN dnf remove -y npm nodejs nodejs-libs nodejs-docs nodejs-full-i18n \
+    python3-requests python3-setuptools \
+    && dnf clean all
+USER 1001
+
 COPY --from=builder --chown=1001:0 /tmp/wheels /tmp/wheels
 COPY requirements.txt .
 
