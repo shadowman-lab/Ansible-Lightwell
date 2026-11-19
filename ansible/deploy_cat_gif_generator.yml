@@ -4,7 +4,8 @@
   gather_facts: false
 
   vars:
-    container_image: ghcr.io/shadowman-lab/cat-gif-generator:latest
+    container_image: ghcr.io/shadowman-lab/cat-gif-generator
+    image_tag: latest
     app_port: 5001
     environments:
       - name: dev
@@ -39,7 +40,7 @@
     - name: Run cat-gif-generator container for each environment
       containers.podman.podman_container:
         name: "cat-gif-generator-{{ item.name }}"
-        image: "{{ container_image }}"
+        image: "{{ container_image }}:{{ image_tag }}"
         state: started
         pull: always
         restart_policy: always
