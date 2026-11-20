@@ -8,6 +8,7 @@
     # placeholders - replace with the real, available virtual IP and public port
     lb_vip: "172.16.0.125"
     lb_vserver_port: 443
+    ssl_certkey_name: Shadowman2027new
     prod_instances:
       - name: prod1
         published_port: 5003
@@ -32,9 +33,20 @@
         nitro_user: "{{ nitro_user }}"
         nitro_pass: "{{ nitro_pass }}"
         name: "{{ lb_vserver_name }}"
-        servicetype: TCP
+        servicetype: SSL
         ipv46: "{{ lb_vip }}"
         port: "{{ lb_vserver_port }}"
+        state: present
+        validate_certs: false
+      delegate_to: localhost
+
+    - name: Bind the existing cert to the virtual server
+      netscaler.adc.sslvserver_sslcertkey_binding:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        vservername: "{{ lb_vserver_name }}"
+        certkeyname: "{{ ssl_certkey_name }}"
         state: present
         validate_certs: false
       delegate_to: localhost

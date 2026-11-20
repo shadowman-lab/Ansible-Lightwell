@@ -5,7 +5,7 @@
     nitro_user: "{{ nitro_user }}"
     nitro_pass: "{{ nitro_pass }}"
     servicegroupname: "cat-gif-generator-{{ prod_instance.name }}-svcgrp"
-    servicetype: TCP
+    servicetype: HTTP
     state: present
     validate_certs: false
     servicegroup_servicegroupmember_binding:

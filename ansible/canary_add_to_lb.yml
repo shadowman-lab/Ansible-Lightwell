@@ -14,7 +14,7 @@
         nitro_pass: "{{ nitro_pass }}"
         state: present
         name: "{{ inventory_hostname }}"
-        ipaddress: "{{ ansible_host | default(inventory_hostname) }}"
+        ipaddress: "{{ ip_addr | default(inventory_hostname) }}"
         validate_certs: false
       delegate_to: localhost
 
