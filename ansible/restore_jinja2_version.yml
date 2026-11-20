@@ -62,6 +62,13 @@
         regexp: '^jinja2=='
         line: "jinja2=={{ jinja2_restore_version }}"
 
+    - name: Point CI at the upstream-only Nexus repository
+      ansible.builtin.lineinfile:
+        path: "{{ lightwell_clone_dest }}/.github/workflows/ci.yml"
+        regexp: '^(\s*)NEXUS_PYPI_URL=.*$'
+        line: '\1NEXUS_PYPI_URL=${{ secrets.NEXUS_PYPI_UPSTREAMONLY_URL }}'
+        backrefs: true
+
     - name: Commit and push directly to main
       ansible.builtin.shell: >
         git add -A &&

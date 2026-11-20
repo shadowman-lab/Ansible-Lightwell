@@ -31,6 +31,13 @@
         regexp: '^jinja2=='
         line: "jinja2=={{ jinja2_fixed_version }}"
 
+    - name: Point CI at the Lightwell Nexus repository
+      ansible.builtin.lineinfile:
+        path: "{{ lightwell_clone_dest }}/.github/workflows/ci.yml"
+        regexp: '^(\s*)NEXUS_PYPI_URL=.*$'
+        line: '\1NEXUS_PYPI_URL=${{ secrets.NEXUS_PYPI_URL }}'
+        backrefs: true
+
     - name: Commit and push the CVE fix branch
       ansible.builtin.shell: >
         git add -A &&
@@ -64,6 +71,7 @@
           body: |
             ## Summary
             - Pins `jinja2` in `requirements.txt` to the patched `{{ jinja2_fixed_version }}` build to remediate the known CVE in `jinja2==3.1.5`.
+            - Points CI's Nexus PyPI build-arg at the Lightwell repository (`secrets.NEXUS_PYPI_URL`) so the build can resolve the patched version.
         status_code: 201
       register: pr_result
 
