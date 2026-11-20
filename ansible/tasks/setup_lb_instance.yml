@@ -18,6 +18,7 @@
       mode: desired
       binding_members:
         - monitor_name: http
+          servicegroupname: "cat-gif-generator-{{ prod_instance.name }}-svcgrp"
   delegate_to: localhost
 
 - name: Bind service group to the shared virtual server
