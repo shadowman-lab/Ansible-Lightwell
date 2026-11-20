@@ -21,7 +21,6 @@
         image: "{{ container_image }}:{{ image_tag }}"
         state: started
         recreate: true
-        pull: always
         restart_policy: always
         ports:
           - "{{ prod_instance_port }}:{{ app_port }}"

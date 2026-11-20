@@ -14,21 +14,6 @@
         published_port: 5002
 
   tasks:
-    - name: Ensure podman is installed
-      ansible.builtin.dnf:
-        name: podman
-        state: present
-
-    - name: Open firewalld port for each environment
-      ansible.posix.firewalld:
-        port: "{{ item.published_port }}/tcp"
-        permanent: true
-        immediate: true
-        state: enabled
-      loop: "{{ environments }}"
-      loop_control:
-        label: "{{ item.name }}"
-
     - name: Login to ghcr
       containers.podman.podman_login:
         username: adworjan
@@ -40,6 +25,7 @@
         name: "cat-gif-generator-{{ item.name }}"
         image: "{{ container_image }}:{{ image_tag }}"
         state: started
+        recreate: true
         restart_policy: always
         ports:
           - "{{ item.published_port }}:{{ app_port }}"
