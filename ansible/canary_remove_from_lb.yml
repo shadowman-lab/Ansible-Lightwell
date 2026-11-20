@@ -1,0 +1,24 @@
+---
+- name: Remove prod instance from NetScaler LB and drain
+  hosts: "{{ vm_name | default('all') }}"
+  gather_facts: false
+
+  vars:
+    lb_servicegroup: "cat-gif-generator-{{ prod_instance_name }}-svcgrp"
+
+  tasks:
+    - name: Remove {{ prod_instance_name }} from load balancer service group
+      netscaler.adc.servicegroup_servicegroupmember_binding:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        servicegroupname: "{{ lb_servicegroup }}"
+        servername: "{{ inventory_hostname }}"
+        port: "{{ prod_instance_port }}"
+        state: absent
+        validate_certs: false
+      delegate_to: localhost
+
+    - name: Wait for {{ prod_instance_name }} connections to drain
+      ansible.builtin.pause:
+        seconds: "{{ lb_drain_delay | default(30) }}"

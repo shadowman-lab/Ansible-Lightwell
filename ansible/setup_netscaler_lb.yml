@@ -1,0 +1,47 @@
+---
+- name: Create initial NetScaler LB config for cat-gif-generator
+  hosts: "{{ vm_name | default('all') }}"
+  gather_facts: false
+
+  vars:
+    lb_vserver_name: lb-cat-gif-generator-prod
+    # placeholders - replace with the real, available virtual IP and public port
+    lb_vip: "172.16.0.125"
+    lb_vserver_port: 443
+    prod_instances:
+      - name: prod1
+        published_port: 5003
+      - name: prod2
+        published_port: 5004
+
+  tasks:
+    - name: Ensure server object exists
+      netscaler.adc.server:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        state: present
+        name: "{{ inventory_hostname }}"
+        ipaddress: "{{ ip_addr | default(inventory_hostname) }}"
+        validate_certs: false
+      delegate_to: localhost
+
+    - name: Create the shared virtual server
+      netscaler.adc.lbvserver:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        name: "{{ lb_vserver_name }}"
+        servicetype: TCP
+        ipv46: "{{ lb_vip }}"
+        port: "{{ lb_vserver_port }}"
+        state: present
+        validate_certs: false
+      delegate_to: localhost
+
+    - name: Create service group for each prod instance and bind it to the virtual server
+      ansible.builtin.include_tasks: tasks/setup_lb_instance.yml
+      loop: "{{ prod_instances }}"
+      loop_control:
+        loop_var: prod_instance
+        label: "{{ prod_instance.name }}"

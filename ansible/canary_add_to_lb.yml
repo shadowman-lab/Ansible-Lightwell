@@ -1,0 +1,31 @@
+---
+- name: Add prod instance back to NetScaler LB
+  hosts: "{{ vm_name | default('all') }}"
+  gather_facts: false
+
+  vars:
+    lb_servicegroup: "cat-gif-generator-{{ prod_instance_name }}-svcgrp"
+
+  tasks:
+    - name: Ensure server object exists
+      netscaler.adc.server:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        state: present
+        name: "{{ inventory_hostname }}"
+        ipaddress: "{{ ansible_host | default(inventory_hostname) }}"
+        validate_certs: false
+      delegate_to: localhost
+
+    - name: Add {{ prod_instance_name }} back to load balancer service group
+      netscaler.adc.servicegroup_servicegroupmember_binding:
+        nsip: "{{ nsip }}"
+        nitro_user: "{{ nitro_user }}"
+        nitro_pass: "{{ nitro_pass }}"
+        servicegroupname: "{{ lb_servicegroup }}"
+        servername: "{{ inventory_hostname }}"
+        port: "{{ prod_instance_port }}"
+        state: present
+        validate_certs: false
+      delegate_to: localhost

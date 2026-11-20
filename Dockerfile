@@ -33,6 +33,7 @@ COPY --from=builder --chown=1001:0 /tmp/wheels /tmp/wheels
 COPY requirements.txt .
 
 USER 1001
+RUN pip install --no-cache-dir --upgrade setuptools==84.2.1
 RUN pip install --no-cache-dir --no-index --find-links=/tmp/wheels -r requirements.txt \
     && rm -rf /tmp/wheels
 

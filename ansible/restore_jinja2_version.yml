@@ -8,7 +8,7 @@
   vars:
     lightwell_repo: git@github.com:shadowman-lab/Ansible-Lightwell.git
     lightwell_clone_dest: /tmp/ansible-lightwell-restore
-    jinja2_restore_version: "3.1.5,!=3.1.5+rhlw.1"
+    jinja2_restore_version: "3.1.5"
     cve_fix_branch: security/cvefix
     github_org: shadowman-lab
     container_package_name: cat-gif-generator

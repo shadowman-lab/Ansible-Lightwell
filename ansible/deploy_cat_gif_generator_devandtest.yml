@@ -1,0 +1,61 @@
+---
+- name: Deploy cat-gif-generator container via podman to Dev and Test
+  hosts: "{{ vm_name | default('all')}}"
+  gather_facts: false
+
+  vars:
+    container_image: ghcr.io/shadowman-lab/cat-gif-generator
+    image_tag: latest
+    app_port: 5001
+    environments:
+      - name: dev
+        published_port: 5001
+      - name: test
+        published_port: 5002
+
+  tasks:
+    - name: Ensure podman is installed
+      ansible.builtin.dnf:
+        name: podman
+        state: present
+
+    - name: Open firewalld port for each environment
+      ansible.posix.firewalld:
+        port: "{{ item.published_port }}/tcp"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop: "{{ environments }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Login to ghcr
+      containers.podman.podman_login:
+        username: adworjan
+        password: "{{ github_pat }}"
+        registry: ghcr.io
+
+    - name: Run cat-gif-generator container for each environment
+      containers.podman.podman_container:
+        name: "cat-gif-generator-{{ item.name }}"
+        image: "{{ container_image }}:{{ image_tag }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ item.published_port }}:{{ app_port }}"
+      loop: "{{ environments }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Verify each environment is running and responding
+      ansible.builtin.uri:
+        url: "http://localhost:{{ item.published_port }}/"
+        status_code: 200
+      loop: "{{ environments }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: app_health_check
+      retries: 5
+      delay: 5
+      until: app_health_check.status == 200
+      changed_when: false
