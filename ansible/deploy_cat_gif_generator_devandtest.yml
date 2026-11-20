@@ -20,27 +20,8 @@
         password: "{{ github_pat }}"
         registry: ghcr.io
 
-    - name: Run cat-gif-generator container for each environment
-      containers.podman.podman_container:
-        name: "cat-gif-generator-{{ item.name }}"
-        image: "{{ container_image }}:{{ image_tag }}"
-        state: started
-        restart_policy: always
-        ports:
-          - "{{ item.published_port }}:{{ app_port }}"
+    - name: Deploy and verify each environment with rollback on failure
+      ansible.builtin.include_tasks: tasks/deploy_and_verify_with_rollback.yml
       loop: "{{ environments }}"
       loop_control:
         label: "{{ item.name }}"
-
-    - name: Verify each environment is running and responding
-      ansible.builtin.uri:
-        url: "http://localhost:{{ item.published_port }}/"
-        status_code: 200
-      loop: "{{ environments }}"
-      loop_control:
-        label: "{{ item.name }}"
-      register: app_health_check
-      retries: 5
-      delay: 5
-      until: app_health_check.status == 200
-      changed_when: false

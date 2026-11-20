@@ -15,21 +15,48 @@
         password: "{{ github_pat }}"
         registry: ghcr.io
 
-    - name: Deploy new image for {{ prod_instance_name }}
-      containers.podman.podman_container:
+    - name: Record current image for {{ prod_instance_name }} before deploying
+      containers.podman.podman_container_info:
         name: "cat-gif-generator-{{ prod_instance_name }}"
-        image: "{{ container_image }}:{{ image_tag }}"
-        state: started
-        restart_policy: always
-        ports:
-          - "{{ prod_instance_port }}:{{ app_port }}"
+      register: previous_container_info
+      failed_when: false
 
-    - name: Verify {{ prod_instance_name }} is healthy
-      ansible.builtin.uri:
-        url: "http://localhost:{{ prod_instance_port }}/"
-        status_code: 200
-      register: app_health_check
-      retries: 5
-      delay: 5
-      until: app_health_check.status == 200
-      changed_when: false
+    - name: Deploy and verify new image for {{ prod_instance_name }}
+      block:
+        - name: Deploy new image for {{ prod_instance_name }}
+          containers.podman.podman_container:
+            name: "cat-gif-generator-{{ prod_instance_name }}"
+            image: "{{ container_image }}:{{ image_tag }}"
+            state: started
+            restart_policy: always
+            ports:
+              - "{{ prod_instance_port }}:{{ app_port }}"
+
+        - name: Verify {{ prod_instance_name }} is healthy
+          ansible.builtin.uri:
+            url: "http://localhost:{{ prod_instance_port }}/"
+            status_code: 200
+          register: app_health_check
+          retries: 5
+          delay: 5
+          until: app_health_check.status == 200
+          changed_when: false
+
+      rescue:
+        - name: Roll back {{ prod_instance_name }} to the previous image
+          containers.podman.podman_container:
+            name: "cat-gif-generator-{{ prod_instance_name }}"
+            image: "{{ previous_container_info.containers[0].ImageName }}"
+            state: started
+            restart_policy: always
+            ports:
+              - "{{ prod_instance_port }}:{{ app_port }}"
+          when: previous_container_info.containers | default([]) | length > 0
+
+        - name: Fail the play after the rollback attempt
+          ansible.builtin.fail:
+            msg: >-
+              Deploying {{ container_image }}:{{ image_tag }} to {{ prod_instance_name }} failed.
+              {{ 'Rolled back to the previous image.'
+                 if (previous_container_info.containers | default([]) | length > 0)
+                 else 'No previous image was running; nothing to roll back to.' }}
