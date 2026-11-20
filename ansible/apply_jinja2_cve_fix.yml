@@ -35,7 +35,7 @@
       ansible.builtin.lineinfile:
         path: "{{ lightwell_clone_dest }}/.github/workflows/ci.yml"
         regexp: '^(\s*)NEXUS_PYPI_URL=.*$'
-        line: '\1NEXUS_PYPI_URL=${{ secrets.NEXUS_LIGHTWELL_URL }}'
+        line: '\1NEXUS_PYPI_URL={% raw %}${{ secrets.NEXUS_LIGHTWELL_URL }}{% endraw %}'
         backrefs: true
 
     - name: Commit and push the CVE fix branch
